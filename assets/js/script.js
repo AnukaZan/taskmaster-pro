@@ -1,5 +1,31 @@
 var tasks = {};
 
+var auditTask = function(taskEl) {
+  //get date from task element
+  var date = $(taskEl)
+    .find("span")
+    .text()
+    .trim();
+  
+  //convert to moment object at 5pm (17:00)
+  var time = moment(date, "L").set("hour", 17);
+
+  //remove any old classes from element
+  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");//in case we're updating overdue task
+
+  //apply new class if task is near/over due date
+  if (moment().isAfter(time)){ //if today is after task time
+    $(taskEl).addClass("list-group-item-danger");
+  }
+
+  else if (Math.abs(moment().diff(time, "days")) <=2){ //if day difference is more than 2 days (in absolute numbers)
+    $(taskEl).addClass("list-group-item-warning");
+  }
+
+};
+
+
+//DRAG FUNCTION
 $(".card .list-group").sortable({
   connectWith: $(".card .list-group"),
   scroll:false,
@@ -54,6 +80,10 @@ $(".card .list-group").sortable({
 
 });
 
+$("#modalDueDate").datepicker({
+  minDate: 1 //limit is until tomorrow
+});
+
 
 var createTask = function(taskText, taskDate, taskList) {
   // create elements that make up a task item
@@ -68,6 +98,7 @@ var createTask = function(taskText, taskDate, taskList) {
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
 
+  auditTask(taskLi);
 
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
@@ -149,13 +180,13 @@ $(".list-group").on("blur", "textarea", function(){ // when user interacts with 
 });
 
 //DUE DATE WAS CLICKED (span within .list-group)
-$(".list-group").on("click", "span", function(){
+$(".list-group").on("click", "span", function(){ //any span element in list group
   //get current text
   var date = $(this)
     .text()
     .trim();
 
-  //create new input element
+  //create new input element (the date input area)
   var dateInput = $("<input>") //create input element
     .attr("type", "text")  //set type="text"
     .addClass("form-control")
@@ -164,12 +195,22 @@ $(".list-group").on("click", "span", function(){
   //swap out elements  
   $(this).replaceWith(dateInput); //turn the due dates into text inputs when clicked
 
+
+  //enable jquery ui datepicker
+  dateInput.datepicker({ //turn dateInput input area into calendar
+    minDate:1,
+    onClose: function(){
+      //when calendar closes, force a change event on dateInput
+      $(this).trigger("change");
+    }
+  });
+
   //when triggered, focus on new element
   dateInput.trigger("focus");
 });
 
 //VALUE OF DUE DATE WAS CHANGED 
-$(".list-group").on("blur", "input[type='text']", function(){ //when you click on anything other than input
+$(".list-group").on("change", "input[type='text']", function(){ //when you dateinput is changed
   //get current text
   var date = $(this)
     .val()  //returns values of form inputs, select, textarea
@@ -197,6 +238,9 @@ $(".list-group").on("blur", "input[type='text']", function(){ //when you click o
 
   //replace input with span element
   $(this).replaceWith(taskSpan);
+
+  //Pass task's li element into auditTask to check new due date
+  auditTask($(taskSpan).closest(".list-group-item"));
 
 });
 
@@ -264,3 +308,4 @@ $("#trash").droppable({
     console.log("out");
   }
 });
+
