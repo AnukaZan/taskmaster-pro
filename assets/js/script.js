@@ -32,15 +32,23 @@ $(".card .list-group").sortable({
   tolerance: "pointer",
   helper: "clone", //create a copy of dragged element and move copy instead of OG
   activate: function(event){ //triggers as soon as dragging starts and stops
+    $(this).addClass("dropover");
+    $(".bottom-trash").addClass("bottom-trash-drag");
     console.log("activate", this);
   },
   deactivate: function(event){//triggers as soon as dragging starts and stops
+    $(this).addClass("dropover");
+    $(".bottom-trash").addClass("bottom-trash-drag");
     console.log("deactivate", this);
   },
   over: function(event){ //triggers when a dragged item enters or leaves a connected list
+    $(event.target).addClass("dropover-active");
+    $(".bottom-trash").addClass("bottom-trash-active");
     console.log("over", event.target);
   },
   out: function(event){ //triggers when a dragged item enters or leaves a connected list
+    $(event.target).addClass("dropover-active");
+    $(".bottom-trash").addClass("bottom-trash-active");
     console.log("out", event.target);
   },
   update: function(event){ //triggers when the contents of a list has changes (reorder, remove, add)
@@ -259,7 +267,7 @@ $("#task-form-modal").on("shown.bs.modal", function() {
 });
 
 // save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
+$("#task-form-modal .btn-save").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
   var taskDate = $("#modalDueDate").val();
@@ -309,3 +317,8 @@ $("#trash").droppable({
   }
 });
 
+setInterval(function(){
+  $(".card .list-group-item").each(function(index, el){ //loop every task with .list-group-item & express it as el
+    auditTask(el);
+  });
+}, (1000 * 60) * 30);
